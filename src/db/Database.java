@@ -3,8 +3,10 @@ import db.exception.EntityNotFoundException;
 import java.util.ArrayList;
 
 public class Database {
-    private static ArrayList<Entity> entities = new ArrayList<>();
-    public static int ID = 1;
+    private static final ArrayList<Entity> entities = new ArrayList<>();
+    private static int ID = 1;
+
+    private Database(){}
 
     public static void add(Entity e){
     e.id = ID++;
@@ -23,7 +25,6 @@ public class Database {
 
     public static void delete(int id){
    boolean remove =  entities.removeIf(entity -> entity.id == id);
-   remove = true;
    if (!remove){
        throw new EntityNotFoundException(id);
    }
@@ -37,8 +38,8 @@ public class Database {
         return;
        }
     }
-    throw new EntityNotFoundException(e.id);
 
+    throw new EntityNotFoundException(e.id);
     }
 
 }
