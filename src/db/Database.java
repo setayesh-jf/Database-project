@@ -1,25 +1,35 @@
 package db;
 import db.exception.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+
 
 
 public class Database {
     private static final ArrayList<Entity> entities = new ArrayList<>();
     private static int id = 1;
-    private static  HashMap<Integer, Validator> validators = new HashMap<>();
+    private static final HashMap<Integer, Validator> validators = new HashMap<>();
 
 
     private Database(){}
 
 
-    public static void add(Entity e){
+    public static void  add(Entity e){
+        if (e instanceof Trackable){
+            Trackable trackable = (Trackable) e;
+
+            Date presentTime = new Date();
+            trackable.setCreationDate(presentTime);
+            trackable.setLastModificationDate(presentTime);
+        }
 
         Validator validator = validators.get(e.getEntityCode());
-        if (validators == null) {
-            throw new IllegalStateException("Validators map is not initialized.");
+
+        if (validator != null) {
+            validator.validate(e);
         }
-        validator.validate(e);
+
 
 
         e.id = id++;
@@ -52,11 +62,19 @@ public class Database {
     public static void update(Entity e){
 
         Validator validator = validators.get(e.getEntityCode());
-        if (validators == null) {
-            throw new IllegalStateException("Validators map is not initialized.");
+        if (validator != null) {
+            validator.validate(e);
         }
 
-        validator.validate(e);
+
+
+        if (e instanceof Trackable){
+            Trackable trackable = (Trackable) e;
+
+            Date presentTime = new Date();
+            trackable.setLastModificationDate(presentTime);
+        }
+
     for (int i = 0; i < entities.size(); i++){
     if (entities.get(i).id == e.id){
         entities.set(i, e.copy());
@@ -69,11 +87,6 @@ public class Database {
     }
 
     public static void registerValidator(int entityCode, Validator validator) {
-        if (validators == null) {
-            throw new IllegalStateException("Validators map is not initialized.");
-        }
-
-
         if (validators.containsKey(entityCode)){
             throw new IllegalArgumentException("entity code" + entityCode + "is not there");
         }
