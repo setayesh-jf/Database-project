@@ -29,7 +29,7 @@ public class StepService {
 
     public static int getStepId(Step step) throws InvalidEntityException {
         if (step == null) {
-            throw new InvalidEntityException("Step cannot be null."); // اصلاح پیام خطا
+            throw new InvalidEntityException("Step cannot be null.");
         }
         return step.getId();
     }
