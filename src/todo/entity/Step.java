@@ -7,7 +7,7 @@ public class Step extends Entity{
    public enum Status{
         NotStarted, Completed;
     }
-    private int id;
+
     private String title;
     private Status status;
     private int taskRef;
@@ -18,16 +18,11 @@ public class Step extends Entity{
         this.title = title;
         this.status = status != null ? status : Status.NotStarted ;
         this.taskRef = taskRef;
+        this.creationDate = new Date();
+        this.lastModificationDate = new Date();
     }
 
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getTitle(){
         return title;
@@ -51,14 +46,17 @@ public class Step extends Entity{
 
     public void setTitle(String title) {
         this.title = title;
+        setLastModificationDate(new Date());
     }
 
     public void setStatus(Status status) {
         this.status = status;
+        setLastModificationDate(new Date());
     }
 
     public void setTaskRef(int taskRef) {
         this.taskRef = taskRef;
+        setLastModificationDate(new Date());
     }
 
     public void setCreationDate(Date date) {
@@ -73,7 +71,8 @@ public class Step extends Entity{
     public Step copy(){
         Step copy = new Step(this.title, this.status, this.taskRef);
         copy.id = this.id;
-        copy.status = this.status;
+        copy.setCreationDate(this.creationDate);
+        copy.setLastModificationDate(this.lastModificationDate);
         return copy;
     }
 

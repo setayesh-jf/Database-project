@@ -19,7 +19,7 @@ public class StepValidator implements Validator{
 
 
         if (step.getTitle() == null || step.getTitle().trim().isEmpty()){
-            throw new InvalidEntityException("Step tittle can't null or empty");
+            throw new InvalidEntityException("Step title can't null or empty");
         }
 
         try {
