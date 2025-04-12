@@ -10,6 +10,7 @@ import todo.service.TaskService;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -68,7 +69,7 @@ public class Main {
                         break;
 
                     case "get incomplete-tasks":
-                        handleGetIncompleteTasks();
+                        handleGetIncompleteTasks(scanner);
                         break;
 
                     default:
@@ -101,13 +102,15 @@ public class Main {
             Task task = TaskService.addTask(title, description, dueDate);
 
             System.out.println("Task saved successfully.");
-            System.out.println("ID: " + task.getId());
+            System.out.println("ID: " + task.id);
         } catch (InvalidEntityException e) {
-            System.out.println("Cannot save task. Error: " + e.getMessage());
+            System.out.println("Cannot save task.");
+            System.out.println("Error: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Invalid date format or input. Please use yyyy-MM-dd.");
         }
     }
+
 
     private static void handleAddStep(Scanner scanner) {
         try {
@@ -126,12 +129,18 @@ public class Main {
 
             Step step = StepService.saveStep(taskRef, stepTitle);
 
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+            String creationDateFormatted = dateFormat.format(step.getCreationDate());
+
             System.out.println("Step saved successfully.");
-            System.out.println("ID: " + step.getId());
+            System.out.println("ID: " + step.id);
+            System.out.println("Creation Date: " + creationDateFormatted);
         } catch (InvalidEntityException | EntityNotFoundException e) {
-            System.out.println("Cannot save step. Error: " + e.getMessage());
+            System.out.println("Cannot save step.");
+            System.out.println("Error: " + e.getMessage());
         }
     }
+
 
     private static void handleDeleteEntity(Scanner scanner) {
         try {
@@ -167,32 +176,72 @@ public class Main {
             System.out.print("Field to update (title/status): ");
             String field = scanner.nextLine().trim().toLowerCase();
 
-            if (field.equals("title")) {
-                System.out.print("New Title: ");
-                String newTitle = scanner.nextLine();
+            Task task = TaskService.getTask(taskId);
 
-                TaskService.updateTaskTitle(taskId, newTitle);
-                System.out.println("Task updated successfully.");
-            } else if (field.equals("status")) {
-                System.out.print("New Status (NotStarted/InProgress/Completed): ");
-                String newStatusInput = scanner.nextLine();
+            switch (field) {
+                case "title":
+                    System.out.print("New Title: ");
+                    String newTitle = scanner.nextLine();
 
-                Task.Status newStatus = Task.Status.valueOf(newStatusInput);
-                TaskService.updateTaskStatus(taskId, newStatus);
+                    if (newTitle == null || newTitle.trim().isEmpty()) {
+                        System.out.println("New title cannot be empty.");
+                        return;
+                    }
 
-                System.out.println("Task status updated successfully.");
-            } else {
-                System.out.println("Invalid field. Please enter 'title' or 'status'.");
+
+                    String oldTitle = task.getTitle();
+                    TaskService.updateTaskTitle(taskId, newTitle);
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+                    String modificationDate = dateFormat.format(new Date());
+
+
+                    System.out.println("Successfully updated the task.");
+                    System.out.println("Field: title");
+                    System.out.println("Old Value: " + oldTitle);
+                    System.out.println("New Value: " + newTitle);
+                    System.out.println("Modification Date: " + modificationDate);
+                    break;
+
+                case "status":
+                    System.out.print("New Status (NotStarted/InProgress/Completed): ");
+                    String newStatusInput = scanner.nextLine();
+
+                    try {
+                        Task.Status newStatus = Task.Status.valueOf(newStatusInput);
+                        Task.Status oldStatus = task.getStatus();
+
+                        TaskService.updateTaskStatus(taskId, newStatus);
+                        String modificationDateForStatus = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy").format(new Date());
+
+
+                        System.out.println("Successfully updated the task.");
+                        System.out.println("Field: status");
+                        System.out.println("Old Value: " + oldStatus);
+                        System.out.println("New Value: " + newStatus);
+                        System.out.println("Modification Date: " + modificationDateForStatus);
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Invalid status value. Please use NotStarted, InProgress, or Completed.");
+                    }
+                    break;
+
+                default:
+                    System.out.println("Invalid field. Please enter 'title' or 'status'.");
             }
-        } catch (InvalidEntityException | EntityNotFoundException e) {
-            System.out.println("Cannot update task. Error: " + e.getMessage());
+        } catch (EntityNotFoundException e) {
+            System.out.println("Cannot find task with ID=" + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
         }
     }
 
+
+
     private static void handleUpdateStep(Scanner scanner) {
+        String stepIdInput = null;
+
         try {
             System.out.print("Step ID: ");
-            String stepIdInput = scanner.nextLine();
+            stepIdInput = scanner.nextLine();
 
             if (!stepIdInput.matches("\\d+")) {
                 System.out.println("Invalid Step ID. Please provide a numeric value.");
@@ -204,32 +253,77 @@ public class Main {
             System.out.print("Field to update (title/status): ");
             String field = scanner.nextLine().trim().toLowerCase();
 
-            if (field.equals("title")) {
-                System.out.print("New Title: ");
-                String newTitle = scanner.nextLine();
+            Step step = StepService.getStepById(stepId);
 
-                StepService.updateStepTitle(stepId, newTitle);
-                System.out.println("Step updated successfully.");
-            } else if (field.equals("status")) {
-                System.out.print("New Status (NotStarted/Completed): ");
-                String newStatusInput = scanner.nextLine();
+            switch (field) {
+                case "title":
+                    System.out.print("New Title: ");
+                    String newTitle = scanner.nextLine();
 
-                Step.Status newStatus = Step.Status.valueOf(newStatusInput);
-                StepService.setStepStatus(stepId, newStatus);
+                    if (newTitle == null || newTitle.trim().isEmpty()) {
+                        System.out.println("New title cannot be empty.");
+                        return;
+                    }
 
-                System.out.println("Step status updated successfully.");
-            } else {
-                System.out.println("Invalid field. Please enter 'title' or 'status'.");
+
+                    String oldTitle = step.getTitle();
+
+
+                    StepService.updateStepTitle(stepId, newTitle);
+
+
+                    System.out.println("Successfully updated the step.");
+                    System.out.println("Field: title");
+                    System.out.println("Old Value: " + oldTitle);
+                    System.out.println("New Value: " + newTitle);
+                    System.out.println("Modification Date: " + new Date());
+                    break;
+
+                case "status":
+                    System.out.print("New Status (NotStarted/Completed): ");
+                    String newStatusInput = scanner.nextLine();
+
+                    try {
+                        Step.Status newStatus = Step.Status.valueOf(newStatusInput);
+                        Step.Status oldStatus = step.getStatus();
+
+
+                        StepService.setStepStatus(stepId, newStatus);
+
+
+                        StepService.checkAndUpdateTaskStatus(step.getTaskRef());
+
+
+                        System.out.println("Successfully updated the step.");
+                        System.out.println("Field: status");
+                        System.out.println("Old Value: " + oldStatus);
+                        System.out.println("New Value: " + newStatus);
+                        System.out.println("Modification Date: " + new Date());
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Invalid status value. Please use NotStarted or Completed.");
+                    }
+                    break;
+
+                default:
+                    System.out.println("Invalid field. Please enter 'title' or 'status'.");
             }
-        } catch (InvalidEntityException | EntityNotFoundException e) {
+        } catch (EntityNotFoundException e) {
+            System.out.println("Cannot update step with ID=" + stepIdInput);
+            System.out.println("Error: " + e.getMessage());
+        } catch (InvalidEntityException e) {
             System.out.println("Cannot update step. Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
         }
     }
 
+
     private static void handleGetTaskById(Scanner scanner) {
+        String taskIdInput = null;
+
         try {
             System.out.print("Task ID: ");
-            String taskIdInput = scanner.nextLine();
+            taskIdInput = scanner.nextLine();
 
             if (!taskIdInput.matches("\\d+")) {
                 System.out.println("Invalid Task ID. Please provide a numeric value.");
@@ -237,23 +331,103 @@ public class Main {
             }
 
             int taskId = Integer.parseInt(taskIdInput);
+
             Task task = TaskService.getTask(taskId);
 
-            System.out.println("ID: " + task.getId());
+            System.out.println("ID: " + task.id);
             System.out.println("Title: " + task.getTitle());
-            System.out.println("Description: " + task.getDescription());
-            System.out.println("Due Date: " + task.getDueDate());
+            System.out.println("Due Date: " + new SimpleDateFormat("yyyy-MM-dd").format(task.getDueDate()));
             System.out.println("Status: " + task.getStatus());
+            System.out.println("Steps:");
+
+            List<Step> steps = StepService.getStepsForTask(taskId);
+
+            for (Step step : steps) {
+                System.out.println("    + " + step.getTitle() + ":");
+                System.out.println("        ID: " + step.id);
+                System.out.println("        Status: " + step.getStatus());
+            }
         } catch (EntityNotFoundException e) {
-            System.out.println("Cannot find task with ID. Error: " + e.getMessage());
+            System.out.println("Cannot find task with ID=" + taskIdInput);
+            System.out.println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
         }
     }
 
+
     private static void handleGetAllTasks() {
-        System.out.println("Fetching all tasks...");
+        try {
+            List<Task> tasks = TaskService.getAllTasks();
+
+            if (tasks.isEmpty()) {
+                System.out.println("No tasks available.");
+                return;
+            }
+
+
+            for (Task task : tasks) {
+                System.out.println("ID: " + task.id);
+                System.out.println("Title: " + task.getTitle());
+                System.out.println("Due Date: " + new SimpleDateFormat("yyyy-MM-dd").format(task.getDueDate()));
+                System.out.println("Status: " + task.getStatus());
+                System.out.println("Steps:");
+
+                List<Step> steps = StepService.getStepsForTask(task.id);
+
+                if (steps.isEmpty()) {
+                    System.out.println("    No steps available for this task.");
+                } else {
+                    for (Step step : steps) {
+                        System.out.println("    + " + step.getTitle() + ":");
+                        System.out.println("        ID: " + step.id);
+                        System.out.println("        Status: " + step.getStatus());
+                    }
+                }
+
+                System.out.println();
+            }
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+        }
     }
 
-    private static void handleGetIncompleteTasks() {
-        System.out.println("Fetching incomplete tasks...");
+
+    private static void handleGetIncompleteTasks(Scanner scanner) {
+        try {
+            List<Task> incompleteTasks = TaskService.getIncompleteTasks();
+
+            if (incompleteTasks.isEmpty()) {
+                System.out.println("No incomplete tasks found.");
+                return;
+            }
+
+
+            for (Task task : incompleteTasks) {
+                System.out.println("ID: " + task.id);
+                System.out.println("Title: " + task.getTitle());
+                System.out.println("Due Date: " + new SimpleDateFormat("yyyy-MM-dd").format(task.getDueDate()));
+                System.out.println("Status: " + task.getStatus());
+                System.out.println("Steps:");
+
+                List<Step> steps = StepService.getStepsForTask(task.id);
+
+                if (steps.isEmpty()) {
+                    System.out.println("    No steps available for this task.");
+                } else {
+                    for (Step step : steps) {
+                        System.out.println("    + " + step.getTitle() + ":");
+                        System.out.println("        ID: " + step.id);
+                        System.out.println("        Status: " + step.getStatus());
+                    }
+                }
+
+                System.out.println();
+            }
+        } catch (EntityNotFoundException e) {
+            System.out.println("Error fetching task steps: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+        }
     }
 }

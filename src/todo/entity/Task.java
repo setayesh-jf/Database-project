@@ -10,28 +10,25 @@ public class Task extends Entity implements Trackable {
    public enum Status{
         NotStarted , InProgress , Completed;
     }
-    private int id;
+
+
     private String title;
     private String description;
     private Date dueDate;
     private Status status;
+    private Date creationDate;
+    private Date lastModificationDate;
 
 
-    public Task(String title, String description, Date dueDate, Status status){
+    public Task(String title, String description, Date dueDate){
         this.title = title;
         this.description = description;
         this.dueDate = new Date(dueDate.getTime());
         this.status = Status.NotStarted;
+        this.creationDate = new Date();
+        this.lastModificationDate = new Date();
     }
 
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
 
     public String getTitle(){
@@ -52,22 +49,23 @@ public class Task extends Entity implements Trackable {
 
     public void setTitle(String title){
         this.title = title;
+        setLastModificationDate(new Date());
     }
 
     public void setDescription(String description){
         this.description = description;
+        setLastModificationDate(new Date());
     }
 
     public void setDueDate(Date dueDate){
         this.dueDate = new Date(dueDate.getTime());
+        setLastModificationDate(new Date());
     }
 
     public void setStatus(Status status){
         this.status = status;
+        setLastModificationDate(new Date());
     }
-
-    private Date creationDate;
-    private Date lastModificationDate;
 
 
     @Override
@@ -92,19 +90,11 @@ public class Task extends Entity implements Trackable {
 
     @Override
     public Task copy(){
-         Task copy = new Task(title , description, new Date(this.dueDate.getTime()), this.status);
-
+         Task copy = new Task(title , description, new Date(this.dueDate.getTime()));
          copy.id = this.id;
          copy.status = this.status;
-
-         if (this.creationDate != null){
-             copy.creationDate = new Date(this.creationDate.getTime());
-         }
-
-         if (this.lastModificationDate != null){
-             copy.lastModificationDate = new Date(this.lastModificationDate.getTime());
-         }
-
+         copy.setCreationDate(this.creationDate) ;
+         copy.setLastModificationDate(this.lastModificationDate);
          return copy;
     }
 

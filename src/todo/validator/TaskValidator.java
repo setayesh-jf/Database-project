@@ -24,7 +24,11 @@ public class TaskValidator implements Validator {
 
 
         if (task.getDueDate() == null) {
-            throw new InvalidEntityException("Due date cannot be null");
+            throw new InvalidEntityException("Due date can not null");
+        }
+
+        if (task.getDescription() == null){
+            throw new InvalidEntityException("Description can not null");
         }
 
     }
